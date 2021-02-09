@@ -15,14 +15,22 @@ class SecurityConfig extends WebSecurityConfigurerAdapter {
     private static final String MAGAZIJNIER = "magazijnier";
     private final DataSource datasource;
 
-    public SecurityConfig(DataSource datasource) {
+    SecurityConfig(DataSource datasource) {
         this.datasource = datasource;
     }
 
+
     @Override
-    protected void
-    configure(AuthenticationManagerBuilder auth) throws Exception {
-            auth.jdbcAuthentication().dataSource(datasource);
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+            auth.jdbcAuthentication().dataSource(datasource).usersByUsernameQuery(
+                    "select naam as username, paswoord as password, actief as enabled" +   " from gebruikers where naam = ?")
+                    .authoritiesByUsernameQuery(
+                            "select gebruikers.naam as username, rollen.naam as authorities" +   " from gebruikers inner join gebruikersrollen" +
+                                    " on gebruikers.id = gebruikersrollen.gebruikerid" +
+                                    " inner join rollen" +
+                                    " on rollen.id = gebruikersrollen.rolid" +
+                                    " where gebruikers.naam = ?"
+                    );
     }
 
     @Override public void configure(WebSecurity web) {
